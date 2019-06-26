@@ -6,72 +6,55 @@
 /*   By: rdomingo <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/22 15:54:12 by rdomingo          #+#    #+#             */
-/*   Updated: 2019/06/24 14:47:26 by rdomingo         ###   ########.fr       */
+/*   Updated: 2019/06/26 14:55:36 by rdomingo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
+#include "libft/libft.h"
 
-static char		do_line(const int fd, char **line, char **ret)
+static char		*biggerbuf(int const fd, char *buf, int *ret)
 {
-	char		*temp;
-	int			val;
+    char		tmp[BUFF_SIZE + 1];
+    char		*tmp2;
 
-	val = 1;
-	while (!(ft_strchr(*line, '\n')) &&
-			(val = read(fd, ret[fd], BUFF_SIZE)) > 0)
+	*ret = read(fd, tmp, BUFF_SIZE);
+	if (*ret < BUFF_SIZE && tmp[*ret -1] != '\n')
 	{
-		temp = *line;
-		*line = ft_strjoin(*line, ret[fd]);
-		free(temp);
-		if (!*line)
-			return (-1);
-		ft_bzero(ret[fd], BUFF_SIZE);
+		tmp[*ret] = '\n';
+		tmp[*ret + 1] = '\0';
 	}
-	if (*line[0] != '\0' && val >= 0)
-		return (*ft_strcpy(*line, ret[fd]));
-	return (val);
+	else
+		tmp[*ret] = '\0';
+	tmp2 = buf;
+	buf = ft_strjoin(buf, tmp);
+	ft_strdel(&tmp2);
+	return (buf);
 }
 
-int					get_next_line(const int fd, char **line)
+int					get_next_line(int const fd, char **line)
 {
-	static char		*buff = NULL;
-	int				ret;
-	char			*str;
+    static char		*buf = NULL;
+    int				ret;
+    char			*str;
 
 	if (!line || fd < 0)
 		return (-1);
 	ret = 1;
-	if (!buff)
-		buff = ft_strnew(0);
+	if (!buf)
+		buf = ft_strnew(0);
 	while (ret > 0)
 	{
-		if ((str = ft_strchr(buff, '\n')) != NULL)
+		if ((str = ft_strchr(buf, '\n')) != NULL)
 		{
-		*str = 0;
-		*line = ft_strdup(buff);
-		ft_memmove(buff, str + 1, ft_strlen(str + 1) + 1);
-		return (1);
+			*str = 0;
+			*line = ft_strdup(buf);
+			ft_memmove(buf, str + 1, ft_strlen(str + 1) + 1);
+			return (1);
 		}
-		ret = do_line(fd, line, &ret);
+		buf = biggerbuf(fd, buf, &ret);
 	}
 	if (ret == 0)
 		*line = ft_strnew(0);
 	return (ret);
-}
-
-int	main()
-{
-	int		ret;
-	char	*line;
-
-	ret = 1;
-	while (ret > 0)
-	{
-		ret = get_next_line(0, &line);
-		//printf("line = %s\n" , line);
-		ft_putchar(ret);
-		free(line);
-	}
 }
