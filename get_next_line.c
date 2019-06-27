@@ -6,7 +6,7 @@
 /*   By: rdomingo <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/22 15:54:12 by rdomingo          #+#    #+#             */
-/*   Updated: 2019/06/27 10:26:34 by rdomingo         ###   ########.fr       */
+/*   Updated: 2019/06/27 15:36:59 by rdomingo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,39 +14,37 @@
 #include "libft/libft.h"
 #include <fcntl.h>
 
-static char		*biggerbuf(int const fd, char *buf, int *ret)
+static char		*do_line(int const fd, char *buf, int *ret)
 {
-    char		tmp[BUFF_SIZE + 1];
-    char		*tmp2;
+	char		cmp[BUFF_SIZE + 1];
+	char		*up;
 
-	*ret = read(fd, tmp, BUFF_SIZE);
-	if (*ret < BUFF_SIZE && tmp[*ret -1] != '\n')
+	*ret = read(fd, cmp, BUFF_SIZE);
+	if (*ret < BUFF_SIZE && cmp[*ret - 1] != '\n')
 	{
-		tmp[*ret] = '\n';
-		tmp[*ret + 1] = '\0';
+		cmp[*ret] = '\n';
+		cmp[*ret++] = '\0';
 	}
 	else
-	{
-		tmp[*ret] = '\0';
-	}
-	tmp2 = buf;
-	buf = ft_strjoin(buf, tmp);
-	ft_strdel(&tmp2);
+		cmp[*ret] = '\0';
+	up = buf;
+	buf = ft_strjoin(buf, cmp);
+	ft_strdel(&up);
 	return (buf);
 }
 
-int					get_next_line(int const fd, char **line)
+int				get_next_line(int const fd, char **line)
 {
-    static char		*buf = NULL;
-    int				ret;
-    char			*str;
+	static char	*buf = NULL;
+	int			i;
+	char		*str;
 
 	if (!line || fd < 0)
 		return (-1);
-	ret = 1;
+	i = 1;
 	if (!buf)
 		buf = ft_strnew(0);
-	while (ret > 0)
+	while (i > 0)
 	{
 		if ((str = ft_strchr(buf, '\n')) != NULL)
 		{
@@ -55,9 +53,10 @@ int					get_next_line(int const fd, char **line)
 			ft_memmove(buf, str + 1, ft_strlen(str + 1) + 1);
 			return (1);
 		}
-		buf = biggerbuf(fd, buf, &ret);
+		buf = do_line(fd, buf, &i);
+		line = ft_strchr(**fd, '\n');
 	}
-	if (ret == 0)
+	if (i == 0)
 		*line = ft_strnew(0);
-	return (ret);
+	return (i);
 }
