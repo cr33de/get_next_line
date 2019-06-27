@@ -6,12 +6,13 @@
 /*   By: rdomingo <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/22 15:54:12 by rdomingo          #+#    #+#             */
-/*   Updated: 2019/06/26 14:55:36 by rdomingo         ###   ########.fr       */
+/*   Updated: 2019/06/27 10:26:34 by rdomingo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include "libft/libft.h"
+#include <fcntl.h>
 
 static char		*biggerbuf(int const fd, char *buf, int *ret)
 {
@@ -25,7 +26,9 @@ static char		*biggerbuf(int const fd, char *buf, int *ret)
 		tmp[*ret + 1] = '\0';
 	}
 	else
+	{
 		tmp[*ret] = '\0';
+	}
 	tmp2 = buf;
 	buf = ft_strjoin(buf, tmp);
 	ft_strdel(&tmp2);
