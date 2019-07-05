@@ -6,7 +6,7 @@
 /*   By: rdomingo <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/22 15:54:12 by rdomingo          #+#    #+#             */
-/*   Updated: 2019/06/30 10:58:59 by rdomingo         ###   ########.fr       */
+/*   Updated: 2019/07/04 13:34:02 by rdomingo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,53 +14,53 @@
 #include "libft/libft.h"
 #include <fcntl.h>
 
-static int			copyline(char *line, char *buf)
+static int		do_line(char **sfd, char **line)
 {
-	unsigned int	count;
+	size_t		i;
+	char		*temp;
 
-	count = 0;
-	while (line[count] != '\n' && line[count])
-		count++;
-	if (ft_strlen(line) > count + 1)
+	i = 0;
+	while ((*sfd)[i] != '\n' && (*sfd)[i] != '\0')
+		i++;
+	if ((*sfd)[i] == '\n')
 	{
-		buf = ft_strcpy(buf, &(line[count + 1]));
+		*line = ft_strsub(*sfd, 0, i);
+		temp = ft_strdup(*sfd + i + 1);
+		ft_strdel(sfd);
+		*sfd = ft_strdup(temp);
+		free(temp);
 	}
-	line[count] = '\0';
+	else if ((*sfd)[i] == '\0')
+	{
+		*line = ft_strdup(*sfd);
+		ft_strdel(sfd);
+	}
 	return (1);
 }
 
-static int			do_line(const int fd, char **line, char **buff)
+int				get_next_line(const int fd, char **line)
 {
-	char			*temp;
-	int				val;
+	char		buf[BUFF_SIZE + 1];
+	static char	*s[1024];
+	char		*temp;
+	int			val;
 
-	val = 1;
-	while (!(ft_strchr(*line, '\n')) &&
-			(val = read(fd, buff[fd], BUFF_SIZE)) > 0)
-	{
-		temp = *line;
-		*line = ft_strjoin(*line, buff[fd]);
-		free(temp);
-		if (!*line)
-			return (-1);
-		ft_bzero(buff[fd], BUFF_SIZE);
-	}
-	if (*line[0] != '\0' && val >= 0)
-		return (copyline(*line, buff[fd]));
-	return (val);
-}
-
-int					get_next_line(const int fd, char **line)
-{
-	static char		*buff[1];
-
-	if (fd < 0 || !line || read(fd, buff[fd], 0) < 0 ||
-		!(*line = ft_strnew(BUFF_SIZE + 1)))
+	if (fd < 0 || !line || read(fd, buf, 0) < 0)
 		return (-1);
-	if (!buff[fd])
-		buff[fd] = ft_strnew(BUFF_SIZE + 1);
-	if (buff[fd][0] != '\0')
-		*line = ft_strcpy(*line, buff[fd]);
-	ft_bzero(buff[fd], BUFF_SIZE);
-	return (do_line(fd, line, buff));
+	if (!s[fd])
+		s[fd] = ft_strnew(1);
+	while (!(ft_strchr(s[fd], '\n')) && (val = read(fd, buf, BUFF_SIZE)) > 0)
+	{
+		buf[val] = '\0';
+		temp = ft_strjoin(s[fd], buf);
+		ft_strdel(&s[fd]);
+		s[fd] = ft_strdup(temp);
+		free(temp);
+	}
+	if (val < 0)
+		return (-1);
+	else if (val == 0 && (s[fd] == NULL || s[fd][0] == '\0'))
+		return (0);
+	else
+		return (do_line(&s[fd], line));
 }
